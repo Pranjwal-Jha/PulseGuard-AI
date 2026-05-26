@@ -7,7 +7,7 @@ from typing import Optional, List
 from fastapi import APIRouter, HTTPException, Depends, status
 
 from backend.models.schemas import (
-    IncidentRCACreate, IncidentRCAResponse, DocumentCreate, DocumentResponse
+    IncidentRCACreate, IncidentRCAResponse, DocumentCreate, DocumentResponse, DocumentSearchRequest
 )
 from backend.services.vector_db import VectorDatabase
 from backend.utils.logging import get_logger

@@ -5,7 +5,7 @@ import uuid
 from datetime import datetime
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, HTTPException, Depends, status, Query
 
 from backend.models.schemas import (
     DecisionQuery, DecisionResponse, StreamingAnomalyCreate, StreamingAnomalyResponse,
@@ -243,14 +243,6 @@ async def get_decision_statistics() -> dict:
         "last_updated": datetime.utcnow().isoformat(),
         "message": "Statistics endpoint - database integration pending"
     }
-            queries=request.queries,
-            top_k=request.top_k,
-            include_context=request.include_context
-        )
-        return decisions
-    except Exception as e:
-        logger.error(f"Error evaluating batch: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("", response_model=list)

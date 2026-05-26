@@ -35,6 +35,12 @@ class DocumentChunk(BaseModel):
     metadata: Optional[Dict[str, Any]] = None
 
 
+class DocumentSearchRequest(BaseModel):
+    """Schema for document search request."""
+    query: str = Field(..., min_length=1, description="Search query text")
+    top_k: int = Field(default=5, ge=1, le=100, description="Number of top results to return")
+
+
 # ============================================================================
 # INCIDENT MANAGEMENT SCHEMAS
 # ============================================================================

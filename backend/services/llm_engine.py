@@ -460,15 +460,6 @@ class LLMEngine:
         except Exception as e:
             logger.error(f"Error generating decision: {e}", exc_info=True)
             raise
-                else:
-                    logger.warning(f"Unknown provider: {settings.llm_provider}, using mock")
-                    self.provider = MockLLMProvider()
-            else:
-                self.provider = MockLLMProvider()
-                logger.info("Using mock LLM provider")
-        except Exception as e:
-            logger.error(f"Error initializing LLM provider: {e}, falling back to mock")
-            self.provider = MockLLMProvider()
     
     async def generate(
         self,
