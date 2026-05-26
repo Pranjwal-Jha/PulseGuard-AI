@@ -40,42 +40,36 @@ async def analyze_anomaly(
 ) -> DecisionResponse:
     """
     Analyze a streaming anomaly and generate AI-powered mitigation recommendation.
-    
-    This endpoint:
-    1. Searches vector DB for historical incidents matching the error pattern
-    2. Generates a deterministic or LLM-based recommendation
-    3. Returns structured decision with citations
-    
-    Args:
-        query: DecisionQuery containing anomaly details
-        vector_db: Vector database instance
-        llm_engine: LLM engine instance
-    
-    Returns:
-        DecisionResponse with recommendation and evidence
-    
-    Raises:
-        HTTPException: If analysis fails
     """
     try:
+        import requests
+        import os
+
         decision_id = str(uuid.uuid4())
         start_time = time.time()
-        
+
         logger.info(
-            f"Analyzing anomaly: {query.error_type} (spike: {query.spike_percentage}%) "
+            f"Analyzing anomaly: {query.error_type} "
+            f"(spike: {query.spike_percentage}%) "
             f"for tenant: {query.tenant_id}"
         )
-        
-        # Search for matching historical incidents
+
+        # ==========================================
+        # SEARCH HISTORICAL INCIDENTS
+        # ==========================================
+
         matched_rcas = await vector_db.search_by_metrics(
             error_type=query.error_type,
             spike_percentage=query.spike_percentage,
             k=query.top_k
         )
-        
+
         logger.info(f"Found {len(matched_rcas)} historical matches")
-        
-        # Prepare context for LLM
+
+        # ==========================================
+        # PREPARE CONTEXT
+        # ==========================================
+
         anomaly_context = {
             "error_type": query.error_type,
             "metric_name": query.metric_name,
@@ -84,14 +78,20 @@ async def analyze_anomaly(
             "service_name": query.service_name,
             "window_minutes": query.window_minutes
         }
-        
-        # Generate decision using LLM
+
+        # ==========================================
+        # GENERATE AI DECISION
+        # ==========================================
+
         decision_data = await llm_engine.generate_decision(
             anomaly_context=anomaly_context,
             matched_rcas=matched_rcas
         )
-        
-        # Extract retrieved documents
+
+        # ==========================================
+        # BUILD RETRIEVED DOCUMENTS
+        # ==========================================
+
         retrieved_documents = [
             RetrievedDocument(
                 vector_db_id=rca['vector_db_id'],
@@ -109,32 +109,102 @@ async def analyze_anomaly(
             )
             for rca in matched_rcas[:3]
         ]
-        
+
         latency_ms = int((time.time() - start_time) * 1000)
-        
-        # Build response
+
+        # ==========================================
+        # BUILD RESPONSE
+        # ==========================================
+
         response = DecisionResponse(
             id=decision_id,
-            matched_incident=decision_data.get('matched_incident', 'UNKNOWN'),
-            symptom=decision_data.get('symptom', 'Unknown symptom'),
-            recommended_action=decision_data.get('recommended_action', 'Manual review required'),
-            confidence_score=min(1.0, max(0.0, decision_data.get('confidence_score', 0.5))),
+            matched_incident=decision_data.get(
+                'matched_incident',
+                'UNKNOWN'
+            ),
+            symptom=decision_data.get(
+                'symptom',
+                'Unknown symptom'
+            ),
+            recommended_action=decision_data.get(
+                'recommended_action',
+                'Manual review required'
+            ),
+            confidence_score=min(
+                1.0,
+                max(
+                    0.0,
+                    decision_data.get('confidence_score', 0.5)
+                )
+            ),
             citations=decision_data.get('citations', []),
             retrieved_documents=retrieved_documents,
             llm_response=decision_data.get('llm_response', ''),
             latency_ms=latency_ms,
             generated_at=datetime.utcnow()
         )
-        
+
         logger.info(
             f"Decision generated: {decision_id} "
-            f"(incident: {response.matched_incident}, confidence: {response.confidence_score:.2%})"
+            f"(incident: {response.matched_incident}, "
+            f"confidence: {response.confidence_score:.2%})"
         )
-        
+
+        # ==========================================
+        # SEND SLACK ALERT
+        # ==========================================
+
+        webhook = os.getenv("SLACK_WEBHOOK_URL")
+
+        if webhook:
+            slack_message = {
+                "text": f"""
+🚨 AI INCIDENT DETECTED
+
+Incident: {response.matched_incident}
+
+Service: {query.service_name}
+Tenant: {query.tenant_id}
+
+Error Type: {query.error_type}
+Metric: {query.metric_name}
+
+Spike Percentage: {query.spike_percentage}%
+
+Recommended Action:
+{response.recommended_action}
+
+Confidence Score:
+{response.confidence_score * 100:.0f}%
+
+Latency:
+{latency_ms} ms
+"""
+            }
+
+            slack_response = requests.post(
+                webhook,
+                json=slack_message
+            )
+
+            logger.info(
+                f"Slack notification sent: "
+                f"{slack_response.status_code}"
+            )
+
+        else:
+            logger.warning(
+                "SLACK_WEBHOOK_URL not found in environment"
+            )
+
         return response
-        
+
     except Exception as e:
-        logger.error(f"Error analyzing anomaly: {e}", exc_info=True)
+        logger.error(
+            f"Error analyzing anomaly: {e}",
+            exc_info=True
+        )
+
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to analyze anomaly: {str(e)}"
