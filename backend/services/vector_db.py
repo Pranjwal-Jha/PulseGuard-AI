@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import logging
 import uuid
 import time
@@ -5,21 +6,60 @@ from typing import List, Dict, Any, Optional
 import chromadb
 from chromadb.config import Settings
 import openai
+=======
+import os
+# Disable ChromaDB anonymized telemetry globally before import
+os.environ["ANONYMIZED_TELEMETRY"] = "False"
+
+import chromadb
+from chromadb.config import Settings as ChromaSettings
+from typing import List, Dict, Any, Optional, Tuple
+import json
+import asyncio
+from decimal import Decimal
+>>>>>>> 4331da77534fad0b6a0db7810778b9099ae8751c
 from backend.config import get_settings
 from backend.database.redis_cache import cache_response
 
+<<<<<<< HEAD
 logger = logging.getLogger(__name__)
+=======
+
+logger = get_logger("vector_db")
+>>>>>>> 4331da77534fad0b6a0db7810778b9099ae8751c
 settings = get_settings()
 
 class VectorDatabase:
     """Production Vector DB using ChromaDB and OpenAI Embeddings with Redis Cache."""
     
+<<<<<<< HEAD
     def __init__(self):
         self.client = chromadb.PersistentClient(
             path=settings.vector_db_path,
             settings=Settings(anonymized_telemetry=False)
         )
         self.collection_name = "incident_rcas"
+=======
+    def __init__(self, persist_directory: str = None, embedding_model: str = None):
+        """Initialize ChromaDB client."""
+        if persist_directory is None:
+            persist_directory = settings.vector_db_path
+        
+        if embedding_model is None:
+            embedding_model = settings.embedding_model
+        
+        # Create directory if it doesn't exist
+        os.makedirs(persist_directory, exist_ok=True)
+        
+        # Initialize ChromaDB with persistent storage
+        chroma_settings = ChromaSettings(
+            is_persistent=True,
+            persist_directory=persist_directory,
+            allow_reset=True,
+            anonymized_telemetry=False
+        )
+
+>>>>>>> 4331da77534fad0b6a0db7810778b9099ae8751c
         
         # Use OpenAI embeddings directly instead of sentence-transformers
         self.openai_client = openai.AsyncOpenAI(api_key=settings.openai_api_key)

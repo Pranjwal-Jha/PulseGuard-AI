@@ -88,24 +88,6 @@ app.include_router(ws_endpoints.router, tags=["WebSocket"])
 
 @app.get("/")
 async def root():
-    """Root endpoint."""
-    return {
-        "app": settings.app_name,
-        "version": settings.app_version,
-        "docs": "/docs",
-        "redoc": "/redoc",
-        "api_docs": "/docs"
-    }
-
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
-app.include_router(notifications.router)
-
-# Root endpoint
-@app.get("/")
-async def root():
     """Root endpoint with API info."""
     return {
         "app": settings.app_name,
@@ -126,3 +108,4 @@ if __name__ == "__main__":
         reload=settings.debug,
         log_level="debug" if settings.debug else "info"
     )
+
