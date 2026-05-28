@@ -253,5 +253,7 @@ class HealthCheckResponse(BaseModel):
     """Schema for health check response."""
     status: str  # healthy, degraded, unhealthy
     version: str
+    app_name: str = Field(default="RAG of Fire", description="Application name")
     services: Dict[str, str]
     timestamp: datetime
+

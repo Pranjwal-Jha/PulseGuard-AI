@@ -15,6 +15,7 @@ async def health_check():
     return HealthCheckResponse(
         status="healthy",
         version=settings.app_version,
+        app_name=settings.app_name,
         services={
             "api": "healthy",
             "database": "pending",
@@ -23,6 +24,7 @@ async def health_check():
         },
         timestamp=datetime.utcnow()
     )
+
 
 
 @router.get("/vector-db")
