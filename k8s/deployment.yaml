@@ -1,0 +1,140 @@
+# Postgres
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+spec:
+  serviceName: "postgres"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:15-alpine
+        env:
+        - name: POSTGRES_USER
+          value: user
+        - name: POSTGRES_PASSWORD
+          value: password
+        - name: POSTGRES_DB
+          value: rag_of_fire
+        ports:
+        - containerPort: 5432
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+spec:
+  ports:
+  - port: 5432
+  selector:
+    app: postgres
+---
+# Redis
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+      - name: redis
+        image: redis:7-alpine
+        ports:
+        - containerPort: 6379
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+spec:
+  ports:
+  - port: 6379
+  selector:
+    app: redis
+---
+# Backend
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pulseguard-backend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: pulseguard-backend
+  template:
+    metadata:
+      labels:
+        app: pulseguard-backend
+    spec:
+      containers:
+      - name: backend
+        image: pulseguard/backend:latest
+        env:
+        - name: DATABASE_URL
+          value: postgresql+asyncpg://user:password@postgres:5432/rag_of_fire
+        - name: REDIS_URL
+          value: redis://redis:6379/0
+        ports:
+        - containerPort: 8000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pulseguard-backend
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 8000
+  selector:
+    app: pulseguard-backend
+---
+# Frontend
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pulseguard-frontend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: pulseguard-frontend
+  template:
+    metadata:
+      labels:
+        app: pulseguard-frontend
+    spec:
+      containers:
+      - name: frontend
+        image: pulseguard/frontend:latest
+        ports:
+        - containerPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pulseguard-frontend
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 3000
+  selector:
+    app: pulseguard-frontend

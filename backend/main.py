@@ -9,7 +9,8 @@ from datetime import datetime
 from backend.config import get_settings
 from backend.utils.logging import get_logger, setup_logging
 from backend.routes import health, pipelines, documents, decisions, notifications, ws_endpoints
-from backend.services.pipeline_stub import get_pipeline, shutdown_pipeline
+from backend.services.pipeline import get_pipeline, shutdown_pipeline
+from backend.utils.observability import setup_observability
 from backend.services.vector_db_init import populate_vector_db
 from backend.services.vector_db import VectorDatabase
 from backend.services.notification import get_notification_service
@@ -63,6 +64,9 @@ app = FastAPI(
     version=settings.app_version,
     lifespan=lifespan,
 )
+
+# Setup Observability (Prometheus + OpenTelemetry)
+setup_observability(app)
 
 # Add CORS middleware
 app.add_middleware(

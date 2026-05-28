@@ -13,7 +13,7 @@ from backend.models.schemas import (
 )
 from backend.services.vector_db import VectorDatabase
 from backend.services.llm_engine import LLMEngine
-from backend.services.pipeline_stub import get_pipeline, StreamMessage
+from backend.services.pipeline import get_pipeline
 from backend.utils.logging import get_logger
 from decimal import Decimal
 
@@ -232,22 +232,22 @@ async def report_streaming_anomaly(
     try:
         anomaly_id = str(uuid.uuid4())
         
-        # Create stream message
-        message = StreamMessage(
-            id=anomaly_id,
-            tenant_id=anomaly.tenant_id,
-            service_name=anomaly.service_name,
-            error_type=anomaly.error_type,
-            metric_name=anomaly.metric_name,
-            baseline_value=anomaly.baseline_value,
-            current_value=anomaly.current_value,
-            spike_percentage=Decimal(str(anomaly.spike_percentage)),
-            timestamp=datetime.utcnow(),
-            metadata=anomaly.raw_payload or {}
-        )
+        # Ingest into pipeline (converted to dict for kafka)
+        message = {
+            "id": anomaly_id,
+            "tenant_id": anomaly.tenant_id,
+            "service_name": anomaly.service_name,
+            "error_type": anomaly.error_type,
+            "metric_name": anomaly.metric_name,
+            "baseline_value": anomaly.baseline_value,
+            "current_value": anomaly.current_value,
+            "spike_percentage": float(anomaly.spike_percentage),
+            "timestamp": datetime.utcnow().isoformat(),
+            "metadata": anomaly.raw_payload or {}
+        }
         
         # Ingest into pipeline
-        await pipeline.ingest_message(message)
+        await pipeline.ingest_telemetry(message)
         
         logger.info(
             f"Anomaly reported: {anomaly_id} "

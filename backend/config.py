@@ -8,19 +8,33 @@ class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
     
     # App
-    app_name: str = "RAG of Fire"
-    app_version: str = "0.1.0"
+    app_name: str = "PulseGuard-AI"
+    app_version: str = "1.0.0"
     debug: bool = False
     
     # Database
-    database_url: str = "postgresql://user:password@localhost/rag_of_fire"
+    database_url: str = "postgresql+asyncpg://user:password@localhost/rag_of_fire"
+    
+    # Redis
+    redis_url: str = "redis://localhost:6379/0"
+    
+    # Kafka
+    kafka_bootstrap_servers: str = "localhost:9092"
+    
+    # Security
+    jwt_secret: str = "super_secret_jwt_key_change_in_production"
+    jwt_algorithm: str = "HS256"
+    access_token_expire_minutes: int = 60
+    
+    # Observability
+    otel_exporter_otlp_endpoint: str = "http://localhost:4317"
     
     # Vector DB
     vector_db_path: str = "./data/chroma_db"
-    embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
+    embedding_model: str = "text-embedding-3-small"
     
     # LLM
-    use_real_llm: bool = False
+    use_real_llm: bool = True
     llm_provider: str = "openai"  # openai, anthropic
     openai_api_key: str = ""
     anthropic_api_key: str = ""
