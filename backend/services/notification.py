@@ -5,8 +5,9 @@ Handles decision broadcasting and multi-channel delivery.
 
 import asyncio
 import json
+import uuid
 import aiohttp
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 from datetime import datetime
 from dataclasses import dataclass, asdict
 from enum import Enum
@@ -260,6 +261,8 @@ class NotificationService:
         self.slack_notifier = SlackNotifier()
         self.logger = logger
         self.is_running = False
+        self.notifications: Dict[str, Dict[str, Any]] = {}
+        self.session: Optional[aiohttp.ClientSession] = None
     
     async def notify_decision(
         self,
@@ -345,19 +348,6 @@ class NotificationService:
         
         return success
 
-
-# Global notification service instance
-_notification_service: Optional[NotificationService] = None
-
-
-def get_notification_service() -> NotificationService:
-    """Get or create notification service."""
-    global _notification_service
-    
-    if _notification_service is None:
-        _notification_service = NotificationService()
-    
-    return _notification_service
     async def send_notification(
         self,
         notification_type: NotificationType,
@@ -496,12 +486,12 @@ def get_notification_service() -> NotificationService:
 
 
 # Global notification service instance
-_service: Optional[NotificationService] = None
+_notification_service: Optional[NotificationService] = None
 
 
 def get_notification_service() -> NotificationService:
     """Get or create global notification service instance."""
-    global _service
-    if _service is None:
-        _service = NotificationService()
-    return _service
+    global _notification_service
+    if _notification_service is None:
+        _notification_service = NotificationService()
+    return _notification_service

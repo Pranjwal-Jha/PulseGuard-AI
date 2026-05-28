@@ -1,14 +1,16 @@
-"""ChromaDB vector database wrapper for document embeddings and semantic search."""
+import os
+# Disable ChromaDB anonymized telemetry globally before import
+os.environ["ANONYMIZED_TELEMETRY"] = "False"
 
 import chromadb
 from chromadb.config import Settings as ChromaSettings
 from typing import List, Dict, Any, Optional, Tuple
-import os
 import json
 import asyncio
 from decimal import Decimal
 from backend.config import get_settings
 from backend.utils.logging import get_logger
+
 
 logger = get_logger("vector_db")
 settings = get_settings()
@@ -32,8 +34,10 @@ class VectorDatabase:
         chroma_settings = ChromaSettings(
             is_persistent=True,
             persist_directory=persist_directory,
-            allow_reset=True
+            allow_reset=True,
+            anonymized_telemetry=False
         )
+
         
         self.client = chromadb.Client(chroma_settings)
         self.embedding_model = embedding_model
