@@ -8,7 +8,7 @@ from datetime import datetime
 
 from backend.config import get_settings
 from backend.utils.logging import get_logger, setup_logging
-from backend.routes import health, pipelines, documents, decisions, notifications, ws_endpoints
+from backend.routes import health, documents, decisions, notifications, ws_endpoints
 from backend.services.pipeline import get_pipeline, shutdown_pipeline
 from backend.utils.observability import setup_observability
 from backend.services.vector_db_init import populate_vector_db
@@ -79,7 +79,6 @@ app.add_middleware(
 
 # Include routes
 app.include_router(health.router, tags=["Health"])
-app.include_router(pipelines.router, tags=["Pipelines"])
 app.include_router(documents.router, tags=["Documents"])
 app.include_router(decisions.router, tags=["Decisions"])
 app.include_router(notifications.router, tags=["Notifications"])
