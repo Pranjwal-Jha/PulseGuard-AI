@@ -7,9 +7,10 @@ from backend.config import get_settings
 
 settings = get_settings()
 
-# Create database engine
+# Create sync database engine (strip asyncpg for sync usage)
+sync_url = settings.database_url.replace("+asyncpg", "")
 engine = create_engine(
-    settings.database_url,
+    sync_url,
     echo=settings.debug,
     pool_size=10,
     max_overflow=20,

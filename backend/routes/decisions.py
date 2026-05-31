@@ -1,5 +1,7 @@
 """REST API routes for AI decision generation and incident management."""
 
+import aiohttp
+
 import time
 import uuid
 from datetime import datetime
@@ -14,6 +16,7 @@ from backend.models.schemas import (
 from backend.services.vector_db import VectorDatabase
 from backend.services.llm_engine import LLMEngine
 from backend.services.pipeline import get_pipeline
+from backend.services.decision_engine import get_decision_engine
 from backend.utils.logging import get_logger
 from decimal import Decimal
 
@@ -42,7 +45,6 @@ async def analyze_anomaly(
     Analyze a streaming anomaly and generate AI-powered mitigation recommendation.
     """
     try:
-        import requests
         import os
 
         decision_id = str(uuid.uuid4())
@@ -182,15 +184,9 @@ Latency:
 """
             }
 
-            slack_response = requests.post(
-                webhook,
-                json=slack_message
-            )
-
-            logger.info(
-                f"Slack notification sent: "
-                f"{slack_response.status_code}"
-            )
+            async with aiohttp.ClientSession() as session:
+                async with session.post(webhook, json=slack_message) as slack_response:
+                    logger.info(f"Slack notification sent: {slack_response.status}")
 
         else:
             logger.warning(
@@ -345,16 +341,6 @@ async def get_decision(decision_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/stats", response_model=dict)
-async def get_decision_stats():
-    """Get decision statistics."""
-    try:
-        engine = get_decision_engine()
-        stats = engine.get_decision_stats()
-        return stats
-    except Exception as e:
-        logger.error(f"Error getting decision stats: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.delete("", response_model=dict)

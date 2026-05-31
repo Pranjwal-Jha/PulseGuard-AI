@@ -34,7 +34,7 @@ class PipelineService:
         """Called when Flink detects an anomaly and produces to Kafka."""
         logger.warning(f"Anomaly detected from Flink: {anomaly_data}")
         # Here we would integrate with the decision engine
-        from backend.services.decision_engine import analyze_anomaly
+        from backend.services.decision_engine import get_decision_engine
         
         # Construct StreamingAnomalyCreate from Flink output
         anomaly_model = StreamingAnomalyCreate(
@@ -49,7 +49,12 @@ class PipelineService:
         )
         
         # Analyze using real LLM and VectorDB
-        await analyze_anomaly(anomaly_model)
+        engine = get_decision_engine()
+        # Build query for the decision engine
+        await engine.evaluate(
+            query=f"{anomaly_model.error_type} spike {anomaly_model.spike_percentage}% on {anomaly_model.service_name}",
+            collection_name="historical_rcas"
+        )
 
 _pipeline_instance: Optional[PipelineService] = None
 
