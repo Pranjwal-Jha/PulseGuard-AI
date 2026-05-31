@@ -25,6 +25,10 @@ RUN pip install --no-cache-dir \
     prometheus-client \
     pyjwt passlib bcrypt
 
+# Install Coral CLI
+RUN curl -sL https://github.com/withcoral/coral/releases/download/v0.4.1/coral-x86_64-unknown-linux-gnu.tar.gz | tar -xz -C /usr/local/bin
+
+
 # Copy the rest of the application
 COPY . .
 

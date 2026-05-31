@@ -10,6 +10,7 @@ from backend.models.schemas import (
     IncidentRCACreate, IncidentRCAResponse, DocumentCreate, DocumentResponse, DocumentSearchRequest
 )
 from backend.services.vector_db import VectorDatabase
+from backend.services.document_processor import get_document_processor
 from backend.utils.logging import get_logger
 
 logger = get_logger("documents")
@@ -330,7 +331,7 @@ async def get_document_stats(
 async def get_collections():
     """List all document collections."""
     try:
-        vector_db = get_vector_db()
+        vector_db = await get_vector_db()
         collections = vector_db.list_collections()
         
         stats = []
@@ -417,7 +418,7 @@ async def search_documents(request: DocumentSearchRequest):
 async def document_system_health():
     """Get health status of document system."""
     try:
-        vector_db = get_vector_db()
+        vector_db = await get_vector_db()
         collections = vector_db.list_collections()
         
         return {

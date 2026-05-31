@@ -35,10 +35,11 @@ class Settings(BaseSettings):
     
     # LLM
     use_real_llm: bool = True
-    llm_provider: str = "openai"  # openai, anthropic
+    llm_provider: str = "gemini"  # gemini, openai, anthropic
     openai_api_key: str = ""
     anthropic_api_key: str = ""
-    llm_model: str = "gpt-4-turbo"
+    gemini_api_key: str = ""
+    llm_model: str = "gemini-3.5-flash"
     
     # Notifications
     smtp_server: str = "smtp.gmail.com"
