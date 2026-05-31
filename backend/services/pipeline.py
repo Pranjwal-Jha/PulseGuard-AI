@@ -13,13 +13,16 @@ class PipelineService:
 
     async def start(self):
         self.is_running = True
-        await kafka_client.start_producer()
-        await kafka_client.start_consumer(
-            topic="telemetry_anomalies",
-            group_id="fastapi_backend",
-            callback=self.handle_anomaly
-        )
-        logger.info("Pipeline service started with Kafka Integration.")
+        try:
+            await kafka_client.start_producer()
+            await kafka_client.start_consumer(
+                topic="telemetry_anomalies",
+                group_id="fastapi_backend",
+                callback=self.handle_anomaly
+            )
+            logger.info("Pipeline service started with Kafka Integration.")
+        except Exception as e:
+            logger.warning(f"Kafka unavailable, running without it. Error: {e}")
 
     async def stop(self):
         self.is_running = False
